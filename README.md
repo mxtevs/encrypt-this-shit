@@ -7,6 +7,7 @@ How to use:
 
 <code><encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory></code>
 <code>encription-this-shit.exe -d payload.bin aes C:\Users\Documents\teste</code>
+<br>
 <code>encription-this-shit.exe -d payload.bin rc4 C:\Users\Documents\teste</code>
 
 O payload.bin deve ser um arquivo contendo os bytes brutos (raw bytes) do seu payload (Normalmente criado usando o HxD). Para garantir uma melhor segurança na criptografia, tanto a chave de 32 bytes quanto o IV (Vetor de Inicialização) de 16 bytes são gerados aleatoriamente.
