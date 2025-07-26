@@ -70,7 +70,7 @@ BOOL enc_aes_data(pAES pAes) {
 
 	// Aloca um espaço na memória para armazenar nosso IV
 	// O endereço base alocado é salvo na nossa estrutura pAes no campo pIV que foi recebida no parametro da função
-	pAes->pIV = HeapAlloc(GetProcessHeap(), 0, 16);
+	pAes->pIV = HeapAlloc(GetProcessHeap(), 0, dwBlockSize);
 	if (!pAes->pIV) {
 		printf("[#] Falha ao alocar o espaço para seu IV!\n");
 		bRetorno = 0;
@@ -122,17 +122,10 @@ BOOL enc_aes_data(pAES pAes) {
 	pAes->pCipherData = pbCipherText;
 	pAes->cbCipherDataSize = cbCipherText;
 	
-	goto SuccessExit;
+	goto Clear_Aes_Structure;
 
 Clear_Aes_Structure:
 
-	if (pbCipherText) {
-		HeapFree(GetProcessHeap(), 0, pbCipherText);
-	}
-
-
-SuccessExit:
-	// Limpeza que ocorre sempre (sucesso ou falha)
 	if (hKey) {
 		BCryptDestroyKey(hKey);
 	}

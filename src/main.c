@@ -9,11 +9,11 @@ int main(int argc, char *argv[]) {
     FILE *fileOutput = NULL;
     BYTE ourKey[32];
     PBYTE Data = NULL;
-
-    // for(int i = 0; i < argc; i++) {
-    //     printf("argv[%d] = %s\n", i, argv[i]);
-    // }
-
+    char keyPath[MAX_PATH]; 
+    char ivPath[MAX_PATH];
+    char payloadPath[MAX_PATH];
+    char* basePath;
+    errno_t err = NULL;
 
     if (argc < 3) {
         usage();
@@ -58,21 +58,42 @@ int main(int argc, char *argv[]) {
                 goto cleanup;
             }
 
-            errno_t err = fopen_s(&fileOutput, argv[4], "wb");
+            
+            basePath = argv[4];
+            sprintf_s(keyPath, MAX_PATH, "%s\\%s", basePath, "key.bin");
+            sprintf_s(ivPath, MAX_PATH, "%s\\%s", basePath, "iv.bin");
+            sprintf_s(payloadPath, MAX_PATH, "%s\\%s", basePath, "payload.bin");
+
+            err = fopen_s(&fileOutput, payloadPath, "wb");
             if (!fileOutput) {
-                printf("[#] Failed to Generate Output\n[!] Erro fopen_s: %d\n", err);
+                printf("[#] Failed to Generate Output1\n[!] Erro fopen_s: %d\n", err);
                 perror("fopen_s");
                 goto cleanup;
             }
 
             fwrite(myAes.pCipherData, sizeof(BYTE), myAes.cbCipherDataSize, fileOutput);
+            fclose(fileOutput);
 
+            err = fopen_s(&fileOutput, keyPath, "wb");
+            if (!fileOutput) {
+                printf("[#] Failed to Generate Output2\n[!] Erro fopen_s: %d\n", err);
+                perror("fopen_s");
+                goto cleanup;
+            }
 
-			PrintHex(L"Key: ", myAes.pKey, myAes.pKeySize);
-			printf("\n");
-			PrintHex(L"IV: ", myAes.pIV, myAes.ivSize);
+            fwrite(myAes.pKey, sizeof(BYTE), myAes.pKeySize, fileOutput);
+            fclose(fileOutput);
 
-            printf("aes");
+            err = fopen_s(&fileOutput, ivPath, "wb");
+            if (!fileOutput) {
+                printf("[#] Failed to Generate Output3\n[!] Erro fopen_s: %d\n", err);
+                perror("fopen_s");
+                goto cleanup;
+            }
+
+            fwrite(myAes.pIV, sizeof(BYTE), myAes.ivSize, fileOutput);
+            fclose(fileOutput);
+
         } else if (strcmp(argv[3], "rc4") == 0) {
             // Implementa criptografia RC4
             printf("rc4");
@@ -90,6 +111,8 @@ int main(int argc, char *argv[]) {
 
     }
 
+    goto cleanup;
+
     cleanup:
 	if (file) {
 		fclose(file);
@@ -103,9 +126,12 @@ int main(int argc, char *argv[]) {
 		fclose(fileOutput);
 	}
 
-	// HeapFree(GetProcessHeap(), 0, myAes.pCipherData);
-	// HeapFree(GetProcessHeap(), 0, myAes.pPlainData);
-	// HeapFree(GetProcessHeap(), 0, myAes.pIV);
+    if (myAes.pCipherData) {
+        HeapFree(GetProcessHeap(), 0, myAes.pCipherData);
+    }
+
+	HeapFree(GetProcessHeap(), 0, myAes.pPlainData);
+	HeapFree(GetProcessHeap(), 0, myAes.pIV);
 
     return 0;
 }
