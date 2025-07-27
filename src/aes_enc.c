@@ -178,6 +178,6 @@ BOOL generate_aes_output(pAES pAes, char* basePath) {
 	fwrite(pAes->pKey, sizeof(BYTE), pAes->pKeySize, file);
 	fclose(file);
 
-	return TRUE;
+	return ret;
 
 }

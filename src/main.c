@@ -1,24 +1,18 @@
 #include <stdio.h>
 #include <windows.h>
 #include "aes_enc.h"
+#include "rc4_enc.h"
 
 // cl.exe /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c
 int main(int argc, char *argv[]) {
     
     BYTE ourKey[32];
-    char keyPath[MAX_PATH]; 
-    char ivPath[MAX_PATH];
-    char payloadPath[MAX_PATH];
+    NTSTATUS STATUS = NULL;
     char* basePath;
-    
     FILE *file = NULL;
-    
     AES aes_struct = {0};
     LONG payloadSize = NULL;
-
     PBYTE Data = NULL;
-    
-    errno_t err = NULL;
 
     if (argc < 3) {
         usage();
@@ -30,18 +24,18 @@ int main(int argc, char *argv[]) {
     
 
     if (strcmp(argv[1], "-e") == 0) {
+        fopen_s(&file, argv[2], "rb");
+
+        if (!file) {
+            printf("Falha ao abrir arquivo!\n");
+            goto cleanup;
+        }
+
+        fseek(file, 0, SEEK_END);
+        payloadSize = ftell(file);
+        fseek(file, 0, SEEK_SET);
         
         if (strcmp(argv[3], "aes") == 0) {
-            fopen_s(&file, argv[2], "rb");
-
-            if (!file) {
-                printf("Falha ao abrir arquivo!\n");
-                goto cleanup;
-            }
-
-            fseek(file, 0, SEEK_END);
-            payloadSize = ftell(file);
-            fseek(file, 0, SEEK_SET);
 
             Data = (PBYTE)HeapAlloc(GetProcessHeap(), 0, payloadSize);
             if (!Data) {
@@ -64,13 +58,50 @@ int main(int argc, char *argv[]) {
             }
 
             if(!generate_aes_output(&aes_struct, argv[4])){ 
-                printf("DEU ERRO!!!!!");
+                printf("[#] Falha ao gerar o seu output!\n");
+                goto cleanup;
             }
 
-
         } else if (strcmp(argv[3], "rc4") == 0) {
-            // Implementa criptografia RC4
-            printf("rc4");
+
+            Data = HeapAlloc(GetProcessHeap(), 0, payloadSize);
+            if (!Data) {
+                printf("Falha ao alocar o buffer!\n");
+                goto cleanup;
+            }
+
+            fread(Data, 1, payloadSize, file);
+
+            USTRING rc4_Data = {
+                .Buffer = Data,
+                .Length = payloadSize, 
+                .MaximumLength = payloadSize,
+            };
+
+            USTRING Key = {
+                .Buffer = ourKey,
+                .Length = sizeof(ourKey),
+                .MaximumLength = sizeof(ourKey)
+            };
+
+            funcToSystemFunction032 pSystemFunc032 = (funcToSystemFunction032) GetProcAddress(LoadLibraryA("Advapi32"), "SystemFunction032");
+            if(!pSystemFunc032) {
+                printf("[#] Falha ao recuperar a função SystemFunction032 e Advapi32.dll\nErro Code: %d\n", GetLastError());
+                goto cleanup;
+            }
+
+            STATUS = pSystemFunc032(&rc4_Data, &Key);
+            if(STATUS != 0x0) {
+                printf("[#] Falha ao realizar a criptografia RC4!\n");
+                goto cleanup;
+            }
+            
+    
+            if(!generate_rc4_output(&Data, &Key, argv[4])) { 
+                printf("Falha ao gerar seu RC4 output!\n");
+                goto cleanup;
+            }
+            
         } else {
             usage();
         }
