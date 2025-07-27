@@ -30,13 +30,13 @@ Para compilar utilize exclusivamente o MSVC<br>
 <code>cl.exe /utf-8 /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c</code>
 
 Se possível, essa deve ser a estrutura do projeto na hora da compilação:<br>
-<code>
+```
 ├── bin/
     └── obj/
 ├── img/
 └── include/
 └── src/
-</code>
+```
 
 O .exe será salvo dentro de bin/
 
