@@ -2,17 +2,22 @@
 #include <windows.h>
 #include "aes_enc.h"
 
+// cl.exe /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c
 int main(int argc, char *argv[]) {
-    AES myAes = {0};
-    LONG payloadSize = NULL;
-    FILE *file = NULL;
-    FILE *fileOutput = NULL;
+    
     BYTE ourKey[32];
-    PBYTE Data = NULL;
     char keyPath[MAX_PATH]; 
     char ivPath[MAX_PATH];
     char payloadPath[MAX_PATH];
     char* basePath;
+    
+    FILE *file = NULL;
+    
+    AES aes_struct = {0};
+    LONG payloadSize = NULL;
+
+    PBYTE Data = NULL;
+    
     errno_t err = NULL;
 
     if (argc < 3) {
@@ -46,53 +51,22 @@ int main(int argc, char *argv[]) {
 
             fread(Data, 1, payloadSize, file);
 
-            myAes.pPlainData = Data;
-            myAes.cbPlainDataSize = payloadSize;
-			myAes.pKey = ourKey;
-			myAes.pIV = NULL;
-			myAes.ivSize = 16;
-			myAes.pKeySize = 32;
+            aes_struct.pPlainData = Data;
+            aes_struct.cbPlainDataSize = payloadSize;
+			aes_struct.pKey = ourKey;
+			aes_struct.pIV = NULL;
+			aes_struct.ivSize = 16;
+			aes_struct.pKeySize = 32;
 
-            if (!enc_aes_data(&myAes)) {
+            if (!enc_aes_data(&aes_struct)) {
                 printf("[#] Encrypted Failed...\n");
                 goto cleanup;
             }
 
-            
-            basePath = argv[4];
-            sprintf_s(keyPath, MAX_PATH, "%s\\%s", basePath, "key.bin");
-            sprintf_s(ivPath, MAX_PATH, "%s\\%s", basePath, "iv.bin");
-            sprintf_s(payloadPath, MAX_PATH, "%s\\%s", basePath, "payload.bin");
-
-            err = fopen_s(&fileOutput, payloadPath, "wb");
-            if (!fileOutput) {
-                printf("[#] Failed to Generate Output1\n[!] Erro fopen_s: %d\n", err);
-                perror("fopen_s");
-                goto cleanup;
+            if(!generate_aes_output(&aes_struct, argv[4])){ 
+                printf("DEU ERRO!!!!!");
             }
 
-            fwrite(myAes.pCipherData, sizeof(BYTE), myAes.cbCipherDataSize, fileOutput);
-            fclose(fileOutput);
-
-            err = fopen_s(&fileOutput, keyPath, "wb");
-            if (!fileOutput) {
-                printf("[#] Failed to Generate Output2\n[!] Erro fopen_s: %d\n", err);
-                perror("fopen_s");
-                goto cleanup;
-            }
-
-            fwrite(myAes.pKey, sizeof(BYTE), myAes.pKeySize, fileOutput);
-            fclose(fileOutput);
-
-            err = fopen_s(&fileOutput, ivPath, "wb");
-            if (!fileOutput) {
-                printf("[#] Failed to Generate Output3\n[!] Erro fopen_s: %d\n", err);
-                perror("fopen_s");
-                goto cleanup;
-            }
-
-            fwrite(myAes.pIV, sizeof(BYTE), myAes.ivSize, fileOutput);
-            fclose(fileOutput);
 
         } else if (strcmp(argv[3], "rc4") == 0) {
             // Implementa criptografia RC4
@@ -105,7 +79,6 @@ int main(int argc, char *argv[]) {
 
     } else if (strcmp(argv[1], "-d") == 0) {
         // Decriptação
-
 
 
 
@@ -122,16 +95,12 @@ int main(int argc, char *argv[]) {
         HeapFree(GetProcessHeap(), 0, Data);
     }
 
-	if (fileOutput) {
-		fclose(fileOutput);
-	}
-
-    if (myAes.pCipherData) {
-        HeapFree(GetProcessHeap(), 0, myAes.pCipherData);
+    if (aes_struct.pCipherData) {
+        HeapFree(GetProcessHeap(), 0, aes_struct.pCipherData);
     }
 
-	HeapFree(GetProcessHeap(), 0, myAes.pPlainData);
-	HeapFree(GetProcessHeap(), 0, myAes.pIV);
+	HeapFree(GetProcessHeap(), 0, aes_struct.pPlainData);
+	HeapFree(GetProcessHeap(), 0, aes_struct.pIV);
 
     return 0;
 }

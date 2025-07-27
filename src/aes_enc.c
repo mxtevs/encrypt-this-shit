@@ -138,3 +138,46 @@ Clear_Aes_Structure:
 
 	return bRetorno;
 }
+BOOL generate_aes_output(pAES pAes, char* basePath) {
+	FILE* file = NULL;
+	BOOL ret = TRUE;
+	errno_t err = NULL;
+
+	char keyPath[MAX_PATH]; 
+    char ivPath[MAX_PATH];
+    char payloadPath[MAX_PATH];
+
+	sprintf_s(keyPath, MAX_PATH, "%s\\%s", basePath, "key.bin");
+    sprintf_s(ivPath, MAX_PATH, "%s\\%s", basePath, "iv.bin");
+	sprintf_s(payloadPath, MAX_PATH, "%s\\%s", basePath, "payload.bin");
+
+	err = fopen_s(&file, payloadPath, "wb");
+	if(!file) {
+		printf("[#] Falha ao gerar a saída do seu payload!\nErro Code: %d", err);
+		ret = FALSE;
+	}
+
+	fwrite(pAes->pCipherData, sizeof(BYTE), pAes->cbCipherDataSize, file);
+	fclose(file);
+
+	err = fopen_s(&file, ivPath, "wb");
+	if(!file) {
+		printf("[#] Falha ao gerar a saída do seu IV!\nErro Code: %d", err);
+		ret = FALSE;
+	}
+
+	fwrite(pAes->pIV, sizeof(BYTE), pAes->ivSize, file);
+	fclose(file);
+
+	err = fopen_s(&file, keyPath, "wb");
+	if (!file) {
+		printf("[#] Falha ao gerar a saída da sua Key!\nErro Code: %d", err);
+		ret = FALSE;
+	}
+
+	fwrite(pAes->pKey, sizeof(BYTE), pAes->pKeySize, file);
+	fclose(file);
+
+	return TRUE;
+
+}

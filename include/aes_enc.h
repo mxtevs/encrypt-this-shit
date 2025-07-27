@@ -19,5 +19,6 @@ typedef struct _AES {
 } AES, * pAES;
 
 BOOL enc_aes_data(pAES pAes);
+BOOL generate_aes_output(pAES pAes, char* basePath);
 
 #endif
