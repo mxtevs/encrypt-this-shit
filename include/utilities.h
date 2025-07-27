@@ -12,6 +12,7 @@
 #define NT_SUCCESS(STATUS) ((NTSTATUS)(Status) >= 0)
 
 VOID usage();
+VOID art();
 VOID fillKey(BYTE* arr[], size_t arr_size);
 VOID PrintHex(LPCWSTR Tittle, PBYTE Data, DWORD DataLen);
 

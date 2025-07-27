@@ -3,8 +3,10 @@
 #include "aes_enc.h"
 #include "rc4_enc.h"
 
-// cl.exe /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c
+// cl.exe /utf-8 /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c
 int main(int argc, char *argv[]) {
+
+    art(); 
     
     BYTE ourKey[32];
     NTSTATUS STATUS = NULL;
