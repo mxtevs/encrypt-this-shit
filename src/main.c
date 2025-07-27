@@ -5,7 +5,6 @@
 
 // cl.exe /utf-8 /Iinclude /Fo"bin\obj\\" /Fe"bin\encrypt-this-shit.exe" src\*.c
 int main(int argc, char *argv[]) {
-
     art(); 
     
     BYTE ourKey[32];
@@ -64,6 +63,11 @@ int main(int argc, char *argv[]) {
                 goto cleanup;
             }
 
+            printf("\nSize in Bytes of Encrypted Data: %d\n", aes_struct.cbCipherDataSize);
+
+            // Zera a estrutura AES ao final do processo
+            memset(&aes_struct, 0, sizeof(aes_struct));
+
         } else if (strcmp(argv[3], "rc4") == 0) {
 
             Data = HeapAlloc(GetProcessHeap(), 0, payloadSize);
@@ -111,10 +115,106 @@ int main(int argc, char *argv[]) {
 
 
     } else if (strcmp(argv[1], "-d") == 0) {
-        // Decriptação
+
+        if (strcmp(argv[6], "aes") == 0) {
+            
+            // Decriptação
+            fopen_s(&file, argv[2], "rb");
+            if (!file) {
+                printf("Falha ao abrir arquivo!\n");
+                goto cleanup;
+            }
+
+            fseek(file, 0, SEEK_END);
+            payloadSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+            
+            PBYTE Data = HeapAlloc(GetProcessHeap(), 0, payloadSize);
+            if (!Data) {
+                printf("Falha ao alocar o buffer!\n");
+                goto cleanup;
+            }
 
 
+            fread(Data, 1, payloadSize, file);
+            fclose(file);
+            file = NULL;
 
+            fopen_s(&file, argv[3], "rb");
+            if (!file) {
+                printf("Falha ao abrir arquivo!\n");
+                goto cleanup;
+            }
+
+            fseek(file, 0, SEEK_END);
+            payloadSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            PBYTE Key = HeapAlloc(GetProcessHeap(), 0 , payloadSize);
+            if (!Key) {
+                printf("Falha ao alocar o buffer!\n");
+                goto cleanup;
+            }
+
+            fread(Key, 1, payloadSize, file);
+            fclose(file);
+            file = NULL;
+
+            fopen_s(&file, argv[4], "rb");
+            if (!file) {
+                printf("Falha ao abrir arquivo!\n");
+                goto cleanup;
+            }
+
+            fseek(file, 0, SEEK_END);
+            payloadSize = ftell(file);
+            fseek(file, 0, SEEK_SET);
+
+            PBYTE iv = HeapAlloc(GetProcessHeap(), 0 , payloadSize);
+            if (!iv) {
+                printf("Falha ao abrir arquivo!\n");
+                goto cleanup;
+            }
+
+            fread(iv, 1, payloadSize, file);
+            fclose(file);
+            file = NULL;
+
+            aes_struct.pCipherData = Data;
+            aes_struct.pKey = Key;
+            aes_struct.pIV = iv;
+            aes_struct.ivSize = 16;
+			aes_struct.pKeySize = 32;
+            aes_struct.cbCipherDataSize = (DWORD)atoi(argv[5]);
+
+            
+            if(!dec_aes_data(&aes_struct)) {
+                printf("FALHOU PAPAI!\n");
+                goto cleanup;
+            }
+
+            for(int i = 0; i < 288; i++) {
+                printf("0x%0.2X ", ((PBYTE)aes_struct.pPlainData)[i]);
+            }
+
+            // printf("\n\n");
+            // for(int i = 0; i < aes_struct.pKeySize; i++) {
+            //     printf("0x%0.2X ", ((PBYTE)aes_struct.pKey)[i]);
+            // }
+
+            // printf("\n\n");
+
+            // for(int i = 0; i < aes_struct.ivSize; i++) {
+            //     printf("0x%0.2X ", ((PBYTE)aes_struct.pIV)[i]);
+            // }
+
+            // Decriptação AES
+        } else if (strcmp(argv[3], "rc4") == 0) {
+            // Decriptação RC4
+        }
+
+    } else {
+        usage();
     }
 
     goto cleanup;

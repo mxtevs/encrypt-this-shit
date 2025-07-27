@@ -2,8 +2,14 @@
 
 VOID usage() {
 	printf("Operation types: -e to encrypt or -d to decrypt\n");
-	printf("Usage: <encryption-that-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory>\n\n");
-	printf("Example: encrypt_that_shit.exe payload.bin aes /home/user/documents/output.txt\n");
+
+    printf("To encrypt: \n");
+    printf("Usage: <encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory>\n\n");
+	printf("encrypt-this-shit.exe payload.bin aes /home/user/documents/\n");
+
+    printf("\nTo Decrypt: \n");
+    printf("Usage: <encrypt-this-shit.exe> <op_type> <payload.bin> <key.bin> <iv.bin> <size_bytes_cipher_data> <denc_type> <output_directory>\n\n");
+    printf("encrypt-this-shit.exe -d payload.bin key.bin iv.bin <128> aes /home/user/documents");
 }
 
 VOID fillKey(BYTE* arr, size_t arr_size) {

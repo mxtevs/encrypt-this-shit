@@ -77,6 +77,12 @@ BOOL enc_aes_data(pAES pAes) {
 		goto Clear_Aes_Structure;
 	}
 
+	PBYTE temp_iv = (PBYTE)HeapAlloc(GetProcessHeap(), 0, dwBlockSize);
+	if (!temp_iv) {
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
 	// Gera o "Key-Object" a partir de uma chave fornecida através da nossa estrutura AES
 	// um handle para o key-object é salvo em hKey
 	Status = BCryptGenerateSymmetricKey(hAes, &hKey, (PVOID)pbKeyObject, dwKeyObjectSize, pAes->pKey, pAes->pKeySize, 0);
@@ -94,13 +100,17 @@ BOOL enc_aes_data(pAES pAes) {
 		goto Clear_Aes_Structure;
 	}
 
+	memcpy(temp_iv, pAes->pIV, dwBlockSize);
+
 	// Primeira chamada para BCryptEncrypt, nessa primeira chamada o parametro pbOutput é NULL. Isso é feito afim de obter o tamanho necessário para o texto cifrado
-	Status = BCryptEncrypt(hKey, (PUCHAR)pAes->pPlainData, pAes->cbPlainDataSize, NULL, pAes->pIV, pAes->ivSize, NULL, 0, &cbCipherText, BCRYPT_BLOCK_PADDING);
+	Status = BCryptEncrypt(hKey, (PUCHAR)pAes->pPlainData, pAes->cbPlainDataSize, NULL, temp_iv, pAes->ivSize, NULL, 0, &cbCipherText, BCRYPT_BLOCK_PADDING);
 	if (!NT_SUCCESS(Status)) {
 		printf("[#] Falha ao realizar BCryptEncrypt[1]! Erro code: 0x%0.8X\n", Status);
 		bRetorno = 0;
 		goto Clear_Aes_Structure;
 	}
+
+	memcpy(temp_iv, pAes->pIV, pAes->ivSize);
 
 	// Aloca memória para receber o texto criptografado
 	pbCipherText = (PVOID)HeapAlloc(GetProcessHeap(), 0, cbCipherText);
@@ -111,7 +121,7 @@ BOOL enc_aes_data(pAES pAes) {
 	}
 
 	// Segunda chamada para BCryptEncrypt que realizará a criptografia 
-	Status = BCryptEncrypt(hKey, (PUCHAR)pAes->pPlainData, pAes->cbPlainDataSize, NULL, pAes->pIV, pAes->ivSize, pbCipherText, cbCipherText, &cbOutput, BCRYPT_BLOCK_PADDING);
+	Status = BCryptEncrypt(hKey, (PUCHAR)pAes->pPlainData, pAes->cbPlainDataSize, NULL, temp_iv, pAes->ivSize, pbCipherText, cbCipherText, &cbOutput, BCRYPT_BLOCK_PADDING);
 	if (!NT_SUCCESS(Status)) {
 		printf("[#] Falha ao realizar a criptogafia dos dados! Erro Code: 0x%0.8X\n", Status);
 		bRetorno = 0;
@@ -138,6 +148,7 @@ Clear_Aes_Structure:
 
 	return bRetorno;
 }
+
 BOOL generate_aes_output(pAES pAes, char* basePath) {
 	FILE* file = NULL;
 	BOOL ret = TRUE;
@@ -180,4 +191,116 @@ BOOL generate_aes_output(pAES pAes, char* basePath) {
 
 	return ret;
 
+}
+
+BOOL dec_aes_data(pAES pAes) {
+	BOOL bRetorno = TRUE;
+	NTSTATUS Status = NULL;
+	BCRYPT_ALG_HANDLE hAes = NULL;
+	DWORD dwBlockSize = NULL;
+	DWORD dwKeyObjectSize = NULL;
+	DWORD cbResult = NULL;
+	DWORD cbPlainData = NULL;
+	BCRYPT_KEY_HANDLE hKey = NULL;
+	PBYTE pbKeyObject = NULL;
+	PBYTE pbPlainData = NULL;
+	PBYTE temp_iv = NULL;
+
+	Status = BCryptOpenAlgorithmProvider(&hAes, BCRYPT_AES_ALGORITHM, NULL, 0);
+	if(!NT_SUCCESS(Status)) {
+		printf("[#] Failed to open AES provider! Error code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	Status = BCryptGetProperty(hAes, BCRYPT_OBJECT_LENGTH, (PBYTE)&dwKeyObjectSize, sizeof(DWORD), &cbResult, 0);
+	if (!NT_SUCCESS(Status)) {
+		printf("[#] Failed to query property 'BCRYPT_OBJECT_LENGTH'! Error code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+	}
+
+	Status = BCryptGetProperty(hAes, BCRYPT_BLOCK_LENGTH, (PBYTE)&dwBlockSize, sizeof(DWORD), &cbResult, 0);
+		if (!NT_SUCCESS(Status)) {
+		printf("[#] Failed to query property 'BCRYPT_BLOCK_LENGTH'! Error code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	if(dwBlockSize != 16) {
+		printf("[#] Invalid Block Size!\n"); 
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	pbKeyObject = (PBYTE)HeapAlloc(GetProcessHeap(), 0, dwKeyObjectSize);
+	if (!pbKeyObject) {
+		printf("[#] Falha ao alocar o espaço para sua Key-Object!\n");
+		bRetorno = 0;
+	}
+
+	Status = BCryptSetProperty(hAes, BCRYPT_CHAINING_MODE, (PBYTE)BCRYPT_CHAIN_MODE_CBC, sizeof(BCRYPT_CHAIN_MODE_CBC), 0);
+	if(!NT_SUCCESS(Status)) {
+		printf("[#] Failed to set BCRYPT_CHAINING_MODE! Error code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	Status = BCryptGenerateSymmetricKey(hAes, &hKey, pbKeyObject, dwKeyObjectSize, (PBYTE)pAes->pKey, pAes->pKeySize, 0);
+	if(!NT_SUCCESS(Status)) {
+		printf("[#] Falha ao Gerar o seu Key-Object! Erro code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+    // Alocar buffer temporário para o IV
+    temp_iv = (PBYTE)HeapAlloc(GetProcessHeap(), 0, pAes->ivSize);
+    if (!temp_iv) {
+        bRetorno = FALSE;
+        goto Clear_Aes_Structure;
+    }
+    
+    // Copiar o IV original para o buffer temporário ANTES da primeira chamada
+    memcpy(temp_iv, pAes->pIV, pAes->ivSize);
+
+	Status = BCryptDecrypt(hKey, (PUCHAR)pAes->pCipherData, (ULONG)pAes->cbCipherDataSize, NULL, temp_iv, pAes->ivSize, NULL, 0, &cbPlainData, BCRYPT_BLOCK_PADDING);
+	if (!NT_SUCCESS(Status)) {
+		printf("[#] Falha ao realizar BCryptEncrypt[1]! Erro code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	memcpy(temp_iv, pAes->pIV, pAes->ivSize);
+
+	pbPlainData = (PBYTE)HeapAlloc(GetProcessHeap(), 0, cbPlainData);
+	if (!pbPlainData) {
+		printf("[#] Falha ao gerar pbPlainData!\n");
+		bRetorno = 0;
+		goto Clear_Aes_Structure;
+	}
+
+	memcpy(temp_iv, pAes->pIV, pAes->ivSize);
+	Status = BCryptDecrypt(hKey, (PUCHAR)pAes->pCipherData, (ULONG)pAes->cbCipherDataSize, NULL, temp_iv, pAes->ivSize, pbPlainData, cbPlainData, &cbResult, BCRYPT_BLOCK_PADDING);
+	if (!NT_SUCCESS(Status)) {
+		printf("[#] Falha ao realizar BCryptEncrypt[2]! Erro code: 0x%0.8X\n", Status);
+		bRetorno = 0;
+		goto Clear_Aes_Structure;	
+	}
+
+
+	pAes->pPlainData = pbPlainData;
+	pAes->cbPlainDataSize = cbResult;
+
+	Clear_Aes_Structure:
+
+	if (hKey) {
+		BCryptDestroyKey(hKey);
+	}
+	if (pbKeyObject) {
+		HeapFree(GetProcessHeap(), 0, pbKeyObject);
+	}
+	if (hAes) {
+		BCryptCloseAlgorithmProvider(hAes, 0);
+	}
+
+	return bRetorno;
 }
