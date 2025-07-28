@@ -14,12 +14,12 @@ RC4:
 
 Para descriptografar:
 
-AES:
+AES:<br>
 <code>encription-this-shit.exe <op_type> <payload.bin> <key.bin> <iv.bin> <payload_size> <enc_type><br></code>
 <code>encription-this-shit.exe -d payloadbin.bin key.bin iv.bin 288 aes</code>
 
-RC4:
-<code>encription-this-shit.exe <op_type> <payload.bin> <key.bin> <iv.bin> <enc_type_> <payload_size><br></code>
+RC4:<br>
+<code>encription-this-shit.exe <op_type> <payload.bin> <enc_type_> <payload_size><br></code>
 <code>encription-this-shit.exe -d payload.bin key.bin 270 rc4</code>
 
 <br>
