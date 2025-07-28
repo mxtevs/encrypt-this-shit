@@ -4,16 +4,23 @@ A simple command line tool to assist with encrypting/obfuscating your payload.
 
 How to use:
 
-<code><encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory></code> 
-<br>
+Para criptografar:
 
-Para encriptar:
-
+AES:
 <code>encription-this-shit.exe -e payload.bin aes C:\Users\Documents\pasta_teste</code><br>
-<code>encription-this-shit.exe -e payloadbins rc4 C:\Users\Documents\pasta_teste</code><br>
+
+RC4:
+<code>encription-this-shit.exe -e payload.bin rc4 C:\Users\Documents\pasta_teste</code><br>
 
 Para descriptografar:
-<code>encription-this-shit.exe -d payloadbin.bin key.bin iv.bin </code>
+
+AES:
+<code>encription-this-shit.exe <op_type> <payload.bin> <key.bin> <iv.bin> <payload_size> <enc_type><br>
+<code>encription-this-shit.exe -d payloadbin.bin key.bin iv.bin 288 aes</code>
+
+RC4:
+<code>encription-this-shit.exe <op_type> <payload.bin> <key.bin> <iv.bin> <enc_type_> <payload_size><br>
+<code>encription-this-shit.exe -d payload.bin key.bin 270 rc4</code>
 
 <br>
 
