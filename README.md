@@ -1,10 +1,20 @@
 A simple command line tool to assist with encrypting/obfuscating your payload. 
 
+![succubus_png](img/suc_gif.gif)
+
 How to use:
 
 <code><encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory></code> 
 <br>
-<code>encription-this-shit.exe -d payload.bin aes C:\Users\Documents\pasta_teste</code>
+
+Para encriptar:
+
+<code>encription-this-shit.exe -e payload.bin aes C:\Users\Documents\pasta_teste</code><br>
+<code>encription-this-shit.exe -e payloadbins rc4 C:\Users\Documents\pasta_teste</code><br>
+
+Para descriptografar:
+<code>encription-this-shit.exe -d payloadbin.bin key.bin iv.bin </code>
+
 <br>
 
 O payload.bin deve ser um arquivo contendo os bytes brutos (raw bytes) do seu payload (Normalmente criado usando o HxD). Para garantir uma melhor segurança na criptografia, tanto a chave de 32 bytes quanto o IV (Vetor de Inicialização) de 16 bytes são gerados aleatoriamente.

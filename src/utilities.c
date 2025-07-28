@@ -9,7 +9,7 @@ VOID usage() {
 
     printf("\nTo Decrypt AES: \n");
     printf("Usage: <encrypt-this-shit.exe> <op_type> <payload.bin> <key.bin> <iv.bin> <size_bytes_cipher_data> <denc_type>\n");
-    printf("\tDecryption Example:encrypt-this-shit.exe -d payload.bin key.bin iv.bin <128> aes\n\n");
+    printf("\tDecryption Example:encrypt-this-shit.exe -d payload.bin key.bin iv.bin 288 aes\n\n");
 
     printf("To Decrypt RC4: \n");
     printf("encryption-this-shit.exe -d payload.bin key.bin rc4 <size_bytes_buffer>\n");
