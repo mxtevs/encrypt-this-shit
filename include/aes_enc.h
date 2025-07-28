@@ -21,6 +21,6 @@ typedef struct _AES {
 BOOL enc_aes_data(pAES pAes);
 BOOL generate_aes_output(pAES pAes, char* basePath);
 BOOL dec_aes_data(pAES pAes);
-PBYTE read_bin_file(char* path);
+PBYTE read_bin_aes_file(char* path);
 
 #endif

@@ -16,6 +16,7 @@ O payload.bin deve ser um arquivo contendo os bytes brutos (raw bytes) do seu pa
 - Criptografia de Payload com AES-256 utilizando a Bcrypt da WinAPI
 - Criptografia de Payload com RC4 através da SystemFunction032 da Advapi
 - Salva todas as informações em uma pasta determinada por argv[4] (Key, IV e Payload para AES) e (Key e Payload se for RC4)
+- Permite visualizar o Output descriptografado para fins de debug
 
 <hr>
 

@@ -17,6 +17,7 @@ BOOL generate_rc4_output(PUSTRING data, PUSTRING key, char* basePath) {
         ret = FALSE;
     }
 
+
     fwrite(data->Buffer, sizeof(BYTE), data->Length, file);
     fclose(file);
 
@@ -30,4 +31,30 @@ BOOL generate_rc4_output(PUSTRING data, PUSTRING key, char* basePath) {
     fclose(file);
 
     return ret;
+}
+
+PBYTE read_bin_rc4_file(char* path) {
+    FILE *file = NULL;
+    DWORD payloadSize = NULL;
+
+    fopen_s(&file, path, "rb");
+    if(!file) {
+        printf("[#] Não foi possível ler o arquivo!\n");
+		exit(1);
+    }
+
+    fseek(file, 0, SEEK_END);
+    payloadSize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    PBYTE temp = HeapAlloc(GetProcessHeap(), 0, payloadSize);
+	if (!temp) {
+		printf("[#] Falha ao alocar recurso!\n");
+		exit(1);
+	}
+
+    fread(temp, 1, payloadSize, file);
+    fclose(file);
+
+    return temp;
 }

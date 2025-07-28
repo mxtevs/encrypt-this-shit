@@ -305,7 +305,7 @@ BOOL dec_aes_data(pAES pAes) {
 	return bRetorno;
 }
 
-PBYTE read_bin_file(char* path) {
+PBYTE read_bin_aes_file(char* path) {
 	FILE *file = NULL;
 	DWORD payloadSize = NULL;
 

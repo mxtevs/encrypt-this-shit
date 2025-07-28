@@ -18,6 +18,9 @@ int main(int argc, char *argv[]) {
     PBYTE KeyCipher = NULL;
     PBYTE ivCipher = NULL;
 
+    PBYTE rc4_Data_in = NULL;
+    PBYTE rc4_key_in = NULL;
+
     if (argc < 3) {
         usage();
         return 1;
@@ -66,7 +69,7 @@ int main(int argc, char *argv[]) {
                 goto cleanup;
             }
 
-            printf("\nSize in Bytes of Encrypted Data: %d\n", aes_struct.cbCipherDataSize);
+            printf("\n[+] Size in Bytes of Encrypted Data: %d\n", aes_struct.cbCipherDataSize);
 
             // Zera a estrutura AES ao final do processo
             memset(&aes_struct, 0, sizeof(aes_struct));
@@ -80,6 +83,7 @@ int main(int argc, char *argv[]) {
             }
 
             fread(Data, 1, payloadSize, file);
+            
 
             USTRING rc4_Data = {
                 .Buffer = Data,
@@ -105,11 +109,13 @@ int main(int argc, char *argv[]) {
                 goto cleanup;
             }
             
-    
-            if(!generate_rc4_output(&Data, &Key, argv[4])) { 
+            if(!generate_rc4_output(&rc4_Data, &Key, argv[4])) { 
                 printf("Falha ao gerar seu RC4 output!\n");
                 goto cleanup;
             }
+
+            printf("\n[+] Size in Bytes of Encrypted Data: %d\n", rc4_Data.Length);
+            printf("\n[+] Size in Bytes of Key: %d\n", Key.Length);
             
         } else {
             usage();
@@ -119,12 +125,37 @@ int main(int argc, char *argv[]) {
 
     } else if (strcmp(argv[1], "-d") == 0) {
 
-        if (strcmp(argv[6], "aes") == 0) {
-
+        if(strcmp(argv[4], "rc4") == 0) {
             
-            DataCipher = read_bin_file(argv[2]); 
-            KeyCipher = read_bin_file(argv[3]);
-            ivCipher = read_bin_file(argv[4]);
+            funcToSystemFunction032 pSystemFunc032 = (funcToSystemFunction032) GetProcAddress(LoadLibraryA("Advapi32"), "SystemFunction032");
+
+            rc4_Data_in = read_bin_rc4_file(argv[2]);
+            rc4_key_in = read_bin_rc4_file(argv[3]);
+
+
+            USTRING rc4_data = {
+                .Buffer = rc4_Data_in,
+                .Length = atoi(argv[5]),
+                .MaximumLength = atoi(argv[5]),
+            };
+
+            USTRING rc4_key = {
+                .Buffer = rc4_key_in,
+                .Length = 32,
+                .MaximumLength = 32
+            };
+
+            pSystemFunc032(&rc4_data, &rc4_key);
+            // printf("BYTES = %d\n", strlen(argv[3]));
+
+            for(int i = 0; i < rc4_data.Length; i++) {
+                printf("0x%0.2X ", ((PBYTE)rc4_data.Buffer)[i]);
+            }
+            
+        } else if (strcmp(argv[6], "aes") == 0) {
+            DataCipher = read_bin_aes_file(argv[2]); 
+            KeyCipher = read_bin_aes_file(argv[3]);
+            ivCipher = read_bin_aes_file(argv[4]);
 
             aes_struct.pCipherData = DataCipher;
             aes_struct.pKey = KeyCipher;
@@ -142,10 +173,8 @@ int main(int argc, char *argv[]) {
                 printf("0x%0.2X ", ((PBYTE)aes_struct.pPlainData)[i]);
             }
 
-            // Decriptação AES
-        } else if (strcmp(argv[3], "rc4") == 0) {
-            // Decriptação RC4
         }
+        
 
     } else {
         usage();

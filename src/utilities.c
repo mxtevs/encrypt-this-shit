@@ -1,15 +1,19 @@
 #include "../include/utilities.h"
 
 VOID usage() {
-	printf("Operation types: -e to encrypt or -d to decrypt\n");
+	printf("Operation types: -e to encrypt or -d to decrypt\n\n");
 
     printf("To encrypt: \n");
-    printf("Usage: <encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory>\n\n");
-	printf("encrypt-this-shit.exe payload.bin aes /home/user/documents/\n");
+    printf("Usage: <encryption-this-shit.exe> <op_type> <payload.bin> <enc_type> <output_directory>\n");
+	printf("\tEncryption Example: encrypt-this-shit.exe -e payload.bin aes /home/user/documents/\n\n");
 
-    printf("\nTo Decrypt: \n");
-    printf("Usage: <encrypt-this-shit.exe> <op_type> <payload.bin> <key.bin> <iv.bin> <size_bytes_cipher_data> <denc_type> <output_directory>\n\n");
-    printf("encrypt-this-shit.exe -d payload.bin key.bin iv.bin <128> aes /home/user/documents");
+    printf("\nTo Decrypt AES: \n");
+    printf("Usage: <encrypt-this-shit.exe> <op_type> <payload.bin> <key.bin> <iv.bin> <size_bytes_cipher_data> <denc_type>\n");
+    printf("\tDecryption Example:encrypt-this-shit.exe -d payload.bin key.bin iv.bin <128> aes\n\n");
+
+    printf("To Decrypt RC4: \n");
+    printf("encryption-this-shit.exe -d payload.bin key.bin rc4 <size_bytes_buffer>\n");
+
 }
 
 VOID fillKey(BYTE* arr, size_t arr_size) {
